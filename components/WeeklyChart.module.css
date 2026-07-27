@@ -1,0 +1,131 @@
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 140px;
+  padding-bottom: 0.25rem;
+}
+
+.barCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  height: 100%;
+  position: relative;
+}
+
+.barAmount {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-align: center;
+  word-break: break-all;
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: var(--bg-secondary);
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  z-index: 10;
+}
+
+.barCol:hover .barAmount {
+  display: block;
+}
+
+.barTrack {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  min-height: 100px;
+}
+
+.bar {
+  width: 100%;
+  background: linear-gradient(to top, var(--accent-dark), var(--accent-light));
+  border-radius: 6px 6px 0 0;
+  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-height: 0;
+}
+
+.barToday {
+  background: linear-gradient(to top, var(--success), #34d399);
+  box-shadow: 0 -4px 12px rgba(34,211,163,0.3);
+}
+
+.dayLabel {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.dayLabelToday {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.todayDot {
+  width: 4px;
+  height: 4px;
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 4px var(--success);
+}
+
+.totalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.totalLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.totalValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}

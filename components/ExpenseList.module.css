@@ -1,0 +1,149 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: all var(--transition);
+  animation: fadeSlideIn 0.3s ease both;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.item:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-light);
+}
+
+.deleting {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.iconWrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon { font-size: 1.2rem; }
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.category {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.description {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.amount {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: 0.3rem;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.item:hover .actions {
+  opacity: 1;
+}
+
+.editBtn,
+.deleteBtn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editBtn:hover {
+  background: rgba(108,99,255,0.15);
+  border-color: var(--accent);
+}
+
+.deleteBtn:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+}
+
+/* Empty */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.emptyIcon { font-size: 3rem; opacity: 0.3; }
+
+.emptyTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.emptySub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
