@@ -39,18 +39,29 @@ export default function AuthPage() {
 
   const handleGoogleLogin = async () => {
     setError('')
+    setLoading(true)
     try {
-      const redirectTo = typeof window !== 'undefined'
-        ? `${window.location.origin}/`
-        : 'https://transcendent-starship-ecbb17.netlify.app/'
-
-      const { error } = await supabase.auth.signInWithOAuth({
+      // skipBrowserRedirect orqali URL ni olamiz va proxy URL ga o'zgartiramiz
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo }
+        options: {
+          redirectTo: `${window.location.origin}/`,
+          skipBrowserRedirect: true,
+        }
       })
       if (error) throw error
+      if (data?.url) {
+        // Supabase domenini Netlify proxy URL bilan almashtiramiz
+        const proxyUrl = data.url.replace(
+          'https://nfvxjgrodcohsrgfnmtz.supabase.co',
+          `${window.location.origin}/api/supabase`
+        )
+        window.location.href = proxyUrl
+      }
     } catch (err) {
       setError(err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
