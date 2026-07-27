@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import AddExpenseModal from '@/components/AddExpenseModal'
 import ExpenseList from '@/components/ExpenseList'
@@ -13,6 +14,7 @@ const formatUZS = (amount) =>
   new Intl.NumberFormat('uz-UZ').format(amount) + ' so\'m'
 
 export default function Dashboard() {
+  const router = useRouter()
   const [user, setUser] = useState(null)
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
@@ -25,16 +27,17 @@ export default function Dashboard() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        window.location.href = '/auth'
+        router.push('/auth')
       } else {
         setUser(session.user)
       }
     })
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) window.location.href = '/auth'
+      if (!session) router.push('/auth')
+      else setUser(session.user)
     })
     return () => listener.subscription.unsubscribe()
-  }, [])
+  }, [router])
 
   const fetchExpenses = useCallback(async () => {
     if (!user) return
@@ -55,6 +58,7 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
+    router.push('/auth')
   }
 
   const handleDelete = async (id) => {
@@ -82,7 +86,6 @@ export default function Dashboard() {
     setShowModal(true)
   }
 
-  // Filtered expenses for the list (by date + category)
   const filteredExpenses = expenses.filter(e => {
     const dateMatch = filterDate ? e.date === filterDate : true
     const catMatch = filterCat === 'all' ? true : e.category === filterCat
@@ -97,7 +100,6 @@ export default function Dashboard() {
 
   return (
     <div className={styles.app}>
-      {/* Background */}
       <div className={styles.bgGlow} />
 
       {/* Header */}
@@ -117,16 +119,13 @@ export default function Dashboard() {
       </header>
 
       <main className={styles.main}>
-        {/* Stats Cards */}
         <StatsCards expenses={expenses} filterDate={filterDate} />
 
-        {/* Charts Row */}
         <div className={styles.chartsRow}>
           <CategoryChart expenses={expenses} />
           <WeeklyChart expenses={expenses} />
         </div>
 
-        {/* Expense Section */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Xarajatlar</h2>
@@ -175,7 +174,6 @@ export default function Dashboard() {
         </section>
       </main>
 
-      {/* Modal */}
       {showModal && (
         <AddExpenseModal
           user={user}
