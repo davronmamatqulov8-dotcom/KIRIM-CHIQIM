@@ -11,7 +11,7 @@ export async function GET(request) {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${origin}/api/auth/callback`,
+        redirectTo: `${origin}/`,
         skipBrowserRedirect: true,
       }
     })
@@ -20,7 +20,6 @@ export async function GET(request) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    // Google login sahifasiga redirect
     return NextResponse.redirect(data.url)
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 })

@@ -23,7 +23,7 @@ function DashboardContent() {
   const [filterDate, setFilterDate] = useState(new Date().toISOString().slice(0, 10))
   const [filterCat, setFilterCat] = useState('all')
 
-  // Session helper
+  // Session helpers
   const getSession = useCallback(() => {
     try {
       const session = JSON.parse(localStorage.getItem('session'))
@@ -41,9 +41,41 @@ function DashboardContent() {
     return null
   }, [])
 
-  // OAuth callback yoki session tekshirish
+  // OAuth & Session initialization
   useEffect(() => {
-    // Google OAuth callback dan kelgan session
+    // 1. Google OAuth hash fragment handling (#access_token=...&refresh_token=...)
+    if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
+      const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'))
+      const accessToken = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
+      const expiresAt = hashParams.get('expires_at')
+
+      if (accessToken) {
+        setLoading(true)
+        fetch('/api/auth/user', {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.user) {
+              localStorage.setItem('session', JSON.stringify({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+                expires_at: expiresAt
+              }))
+              localStorage.setItem('user', JSON.stringify(data.user))
+              setUser(data.user)
+              window.history.replaceState(null, '', '/')
+            } else {
+              router.push('/auth')
+            }
+          })
+          .catch(() => router.push('/auth'))
+        return
+      }
+    }
+
+    // 2. Query param session handling
     const sessionParam = searchParams.get('session')
     if (sessionParam) {
       try {
@@ -60,7 +92,7 @@ function DashboardContent() {
       } catch {}
     }
 
-    // LocalStorage dan session tekshirish
+    // 3. LocalStorage session check
     const saved = getSession()
     if (saved) {
       setUser(saved.user)
