@@ -4,10 +4,3 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-# Supabase proxy - brauzer to'g'ridan supabase.co ga tegmaydi
-[[redirects]]
-  from = "/api/supabase/*"
-  to = "https://nfvxjgrodcohsrgfnmtz.supabase.co/:splat"
-  status = 200
-  force = true

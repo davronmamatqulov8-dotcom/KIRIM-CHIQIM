@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import AddExpenseModal from '@/components/AddExpenseModal'
 import ExpenseList from '@/components/ExpenseList'
@@ -12,7 +12,7 @@ import styles from './page.module.css'
 const formatUZS = (amount) =>
   new Intl.NumberFormat('uz-UZ').format(amount) + ' so\'m'
 
-export default function Dashboard() {
+function DashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [user, setUser] = useState(null)
@@ -55,7 +55,6 @@ export default function Dashboard() {
         }))
         localStorage.setItem('user', JSON.stringify(sessionData.user))
         setUser(sessionData.user)
-        // URL dan session param ni olib tashlaymiz
         router.replace('/')
         return
       } catch {}
@@ -84,7 +83,6 @@ export default function Dashboard() {
         const data = await res.json()
         setExpenses(data)
       } else if (res.status === 401) {
-        // Token yaroqsiz — logoutf
         localStorage.removeItem('session')
         localStorage.removeItem('user')
         router.push('/auth')
@@ -231,5 +229,17 @@ export default function Dashboard() {
         />
       )}
     </div>
+  )
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={
+      <div className={styles.loadingScreen}>
+        <span className={styles.loadingSpinner} />
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }
