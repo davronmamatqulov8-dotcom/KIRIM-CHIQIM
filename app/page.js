@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { useRouter, useSearchParams } from 'next/navigation'
 import AddExpenseModal from '@/components/AddExpenseModal'
 import ExpenseList from '@/components/ExpenseList'
 import CategoryChart from '@/components/CategoryChart'
@@ -15,6 +14,7 @@ const formatUZS = (amount) =>
 
 export default function Dashboard() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [user, setUser] = useState(null)
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
@@ -23,46 +23,94 @@ export default function Dashboard() {
   const [filterDate, setFilterDate] = useState(new Date().toISOString().slice(0, 10))
   const [filterCat, setFilterCat] = useState('all')
 
-  // Auth check
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.push('/auth')
-      } else {
-        setUser(session.user)
-      }
-    })
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) router.push('/auth')
-      else setUser(session.user)
-    })
-    return () => listener.subscription.unsubscribe()
-  }, [router])
+  // Session helper
+  const getSession = useCallback(() => {
+    try {
+      const session = JSON.parse(localStorage.getItem('session'))
+      const user = JSON.parse(localStorage.getItem('user'))
+      if (session?.access_token && user) return { session, user }
+    } catch {}
+    return null
+  }, [])
 
+  const getToken = useCallback(() => {
+    try {
+      const session = JSON.parse(localStorage.getItem('session'))
+      return session?.access_token || null
+    } catch {}
+    return null
+  }, [])
+
+  // OAuth callback yoki session tekshirish
+  useEffect(() => {
+    // Google OAuth callback dan kelgan session
+    const sessionParam = searchParams.get('session')
+    if (sessionParam) {
+      try {
+        const sessionData = JSON.parse(decodeURIComponent(sessionParam))
+        localStorage.setItem('session', JSON.stringify({
+          access_token: sessionData.access_token,
+          refresh_token: sessionData.refresh_token,
+          expires_at: sessionData.expires_at,
+        }))
+        localStorage.setItem('user', JSON.stringify(sessionData.user))
+        setUser(sessionData.user)
+        // URL dan session param ni olib tashlaymiz
+        router.replace('/')
+        return
+      } catch {}
+    }
+
+    // LocalStorage dan session tekshirish
+    const saved = getSession()
+    if (saved) {
+      setUser(saved.user)
+    } else {
+      router.push('/auth')
+    }
+  }, [searchParams, router, getSession])
+
+  // Xarajatlarni olish
   const fetchExpenses = useCallback(async () => {
-    if (!user) return
+    const token = getToken()
+    if (!token) return
+
     setLoading(true)
-    const { data, error } = await supabase
-      .from('expenses')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false })
-      .order('created_at', { ascending: false })
-    if (!error) setExpenses(data || [])
+    try {
+      const res = await fetch('/api/expenses', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setExpenses(data)
+      } else if (res.status === 401) {
+        // Token yaroqsiz — logoutf
+        localStorage.removeItem('session')
+        localStorage.removeItem('user')
+        router.push('/auth')
+      }
+    } catch (err) {
+      console.error('Fetch error:', err)
+    }
     setLoading(false)
-  }, [user])
+  }, [getToken, router])
 
   useEffect(() => {
-    fetchExpenses()
-  }, [fetchExpenses])
+    if (user) fetchExpenses()
+  }, [user, fetchExpenses])
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
+  const handleLogout = () => {
+    localStorage.removeItem('session')
+    localStorage.removeItem('user')
     router.push('/auth')
   }
 
   const handleDelete = async (id) => {
-    await supabase.from('expenses').delete().eq('id', id)
+    const token = getToken()
+    await fetch(`/api/expenses/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
     setExpenses(prev => prev.filter(e => e.id !== id))
   }
 

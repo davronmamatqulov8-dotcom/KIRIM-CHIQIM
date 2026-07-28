@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import styles from './AddExpenseModal.module.css'
 
 const CATEGORIES = [
@@ -23,6 +22,15 @@ export default function AddExpenseModal({ user, expense, onSave, onClose }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const getToken = () => {
+    try {
+      const session = JSON.parse(localStorage.getItem('session'))
+      return session?.access_token || null
+    } catch {
+      return null
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!amount || Number(amount) <= 0) {
@@ -33,7 +41,6 @@ export default function AddExpenseModal({ user, expense, onSave, onClose }) {
     setError('')
 
     const payload = {
-      user_id: user.id,
       amount: Number(amount),
       category,
       description: description.trim() || null,
@@ -41,24 +48,32 @@ export default function AddExpenseModal({ user, expense, onSave, onClose }) {
     }
 
     try {
+      const token = getToken()
+      let res
+
       if (isEdit) {
-        const { data, error: err } = await supabase
-          .from('expenses')
-          .update(payload)
-          .eq('id', expense.id)
-          .select()
-          .single()
-        if (err) throw err
-        onSave(data)
+        res = await fetch(`/api/expenses/${expense.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload),
+        })
       } else {
-        const { data, error: err } = await supabase
-          .from('expenses')
-          .insert(payload)
-          .select()
-          .single()
-        if (err) throw err
-        onSave(data)
+        res = await fetch('/api/expenses', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload),
+        })
       }
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Xatolik')
+      onSave(data)
     } catch (err) {
       setError(err.message)
     } finally {

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
 import styles from './auth.module.css'
 
 export default function AuthPage() {
@@ -21,14 +20,26 @@ export default function AuthPage() {
     setMessage('')
 
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup'
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Xatolik yuz berdi')
+      }
+
+      if (data.session) {
+        // Sessionni localStorage'ga saqlaymiz
+        localStorage.setItem('session', JSON.stringify(data.session))
+        localStorage.setItem('user', JSON.stringify(data.user))
         router.push('/')
       } else {
-        const { error } = await supabase.auth.signUp({ email, password })
-        if (error) throw error
-        setMessage('✅ Ro\'yxatdan o\'tdingiz! Emailingizni tasdiqlang yoki tizimga kiring.')
+        setMessage(data.message || '✅ Ro\'yxatdan o\'tdingiz! Emailingizni tasdiqlang yoki tizimga kiring.')
       }
     } catch (err) {
       setError(err.message)
@@ -37,32 +48,9 @@ export default function AuthPage() {
     }
   }
 
-  const handleGoogleLogin = async () => {
-    setError('')
-    setLoading(true)
-    try {
-      // skipBrowserRedirect orqali URL ni olamiz va proxy URL ga o'zgartiramiz
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-          skipBrowserRedirect: true,
-        }
-      })
-      if (error) throw error
-      if (data?.url) {
-        // Supabase domenini Netlify proxy URL bilan almashtiramiz
-        const proxyUrl = data.url.replace(
-          'https://nfvxjgrodcohsrgfnmtz.supabase.co',
-          `${window.location.origin}/api/supabase`
-        )
-        window.location.href = proxyUrl
-      }
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
+  const handleGoogleLogin = () => {
+    // Server-side API route Google'ga redirect qiladi
+    window.location.href = '/api/auth/google'
   }
 
   return (
